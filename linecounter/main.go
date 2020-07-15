@@ -12,12 +12,23 @@ func main() {
 		fmt.Fprintln(os.Stdin, "Invalid number of arguments")
 		return
 	}
-	filename := os.Args[1]
+	for i := 1; i < len(os.Args); i++ {
+		filename := os.Args[i]
+		numOfLines, err := countLine(os.Args[i])
+		if err != nil {
+			fmt.Fprintf(os.Stdin, "Error while reading file %s\n", filename)
+			continue
+		}
+		fmt.Fprintf(os.Stdin, "There are %d lines in %s\n", numOfLines, filename)
+	}
+
+}
+
+func countLine(filename string) (int, error) {
 	file, err := os.Open(filename)
 	defer file.Close()
 	if err != nil {
-		fmt.Fprintf(os.Stdin, "Cannot open file: %s\n", filename)
-		return
+		return -1, err
 	}
 	reader := bufio.NewReader(file)
 	numOfLines := 0
@@ -27,13 +38,12 @@ func main() {
 			if err == io.EOF {
 				break
 			}
-			fmt.Fprintf(os.Stdin, "Error while reading file: %v\n", err.Error())
-			break
+			return -1, err
 		}
 		// isPrefix will be set if the line is too long (> 4096 bytes)
 		if !isPrefix {
 			numOfLines++
 		}
 	}
-	fmt.Fprintf(os.Stdin, "There are %d lines in %s\n", numOfLines, filename)
+	return numOfLines, nil
 }
