@@ -12,14 +12,24 @@ func main() {
 		fmt.Fprintln(os.Stdin, "Invalid number of arguments")
 		return
 	}
+
+	ws := make(chan bool)
+
 	for i := 1; i < len(os.Args); i++ {
 		filename := os.Args[i]
-		numOfLines, err := countLine(os.Args[i])
-		if err != nil {
-			fmt.Fprintf(os.Stdin, "Error while reading file %s\n", filename)
-			continue
-		}
-		fmt.Fprintf(os.Stdin, "There are %d lines in %s\n", numOfLines, filename)
+
+		go func(f string) {
+			numOfLines, err := countLine(f)
+			if err != nil {
+				fmt.Fprintf(os.Stdin, "Error while reading file %s\n", filename)
+			}
+			fmt.Fprintf(os.Stdin, "There are %d lines in %s\n", numOfLines, filename)
+			ws <- true
+		}(filename)
+
+	}
+	for i := 1; i < len(os.Args); i++ {
+		<-ws
 	}
 
 }
